@@ -39,7 +39,7 @@ int main( int argc, char **argv )
           //  save if necessary
           //
           if( fsave )
-              save( fsave, n, tnodes );
+              save( fsave, 0, n, tnodes );
         }
     
     //
@@ -72,7 +72,7 @@ int main( int argc, char **argv )
           //  save if necessary
           //
           if( fsave && (step%SAVEFREQ) == 0 )
-              save( fsave, n, tnodes );
+              save( fsave, step, n, tnodes );
         }
     }
     simulation_time = read_timer( ) - simulation_time;
@@ -82,8 +82,8 @@ int main( int argc, char **argv )
     //
     // Printing summary data
     //
-    if( fsum) 
-        fprintf(fsum,"%d %g\n",n,simulation_time);
+    // if( fsum) 
+    //    fprintf(fsum,"%d %g\n",n,simulation_time);
  
     //
     // Clearing space

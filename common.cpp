@@ -94,16 +94,16 @@ void tupdate( node_t &tnode, int dim )
 //
 //  I/O routines
 //
-void save( FILE *f, int n, node_t *tnode )
+void save( FILE *f, int step, int n, node_t *tnode )
 {
-    static bool first = true;
-    if( first )
-    {
-        fprintf( f, "%d\n", n );
-        first = false;
-    }
+    //static bool first = true;
+    //if( first )
+    //{
+    //    fprintf( f, "%d\n", n );
+    //    first = false;
+    //}
     for( int i = 0; i < n; i++ )
-        fprintf( f, "%g,%g\n", tnode[i].T, tnode[i].x );
+        fprintf( f, "%d,%g,%g,%g\n", step, tnode[i].x, 0.0, tnode[i].T);
 }
 
 //

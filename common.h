@@ -39,7 +39,7 @@ void tupdate( node_t &tnode, int dim );
 //  I/O routines
 //
 FILE *open_save( char *filename, int n );
-void save( FILE *f, int n, node_t *tnodes );
+void save( FILE *f, int step, int n, node_t *tnodes );
 
 //
 //  argument processing routines
