@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "common.h"
+#include "common_naive.h"
 
 //
 //  benchmarking program
@@ -52,17 +52,17 @@ int main( int argc, char **argv )
         //
         //  sum temperatures for approximation
         //
-        // 1D approximation
-        for( int i = 1; i < n; i++ )
+        for( int i = 0; i < n; i++ )
         {
-			apply_tsum( tnodes[i], tnodes[i-1]);
+            for (int j = 0; j < n; j++ )
+				apply_tsum( tnodes[i], tnodes[j]);
         }
  
         //
         //  move particles
         //
         for( int i = 0; i < n; i++ ) 
-            tupdate( tnodes[i], 1);		
+            tupdate( tnodes[i] );		
 
         if( find_option( argc, argv, "-no" ) == -1 )
         {

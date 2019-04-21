@@ -76,18 +76,21 @@ void apply_tsum( node_t &tnode, node_t &neighbor)
     if (tnode.fixed) {
         return;
     }
-    tnode.T_sum += neighbor.T;
+    double dist = fabs(tnode.x - neighbor.x);
+    if ( dist <= dx + 0.001 && dist != 0 ) {
+        tnode.T_sum += neighbor.T;
+    }
 }
 
 //
 //  Solve for the temperature
 //
-void tupdate( node_t &tnode, int dim )
+void tupdate( node_t &tnode )
 {
     if (tnode.fixed) {
         return;
     }
-    tnode.T = ((double) tnode.T_sum) / ((double) dim * 2);
+    tnode.T = ((double) tnode.T_sum) / ((double) 2);
     tnode.T_sum = 0;
 }
 
