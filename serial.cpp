@@ -52,10 +52,12 @@ int main( int argc, char **argv )
         //
         //  sum temperatures for approximation
         //
-        // 1D approximation
-        for( int i = 1; i < n; i++ )
+        // We know the ends are fixed in 1D
+        // no checks required.
+        for( int i = 1; i < n-1; i++ )
         {
 			apply_tsum( tnodes[i], tnodes[i-1]);
+            apply_tsum( tnodes[i], tnodes[i+1]);
         }
  
         //
