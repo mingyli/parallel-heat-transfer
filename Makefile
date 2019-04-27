@@ -10,7 +10,7 @@ CFLAGS = -O2
 LIBS =
 
 
-TARGETS = serial
+TARGETS = serial openmp
 
 all:	$(TARGETS)
 

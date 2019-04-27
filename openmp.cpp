@@ -10,6 +10,7 @@
 //
 int main( int argc, char **argv )
 {   
+    int numthreads;
 
     if( find_option( argc, argv, "-h" ) >= 0 )
     {
@@ -59,7 +60,7 @@ int main( int argc, char **argv )
         //
         #pragma omp for
         for( int i = 0; i < n; i++ ) 
-            move( particles[i] );
+          tupdate( tnodes[i], 1);   
   
         if( find_option( argc, argv, "-no" ) == -1 ) 
         {
@@ -68,13 +69,13 @@ int main( int argc, char **argv )
           //
           #pragma omp master
           if( fsave && (step%SAVEFREQ) == 0 )
-              save( fsave, n, particles );
+              save( fsave, step, n, tnodes );
         }
     }
 }
     simulation_time = read_timer( ) - simulation_time;
     
-    printf( "n = %d,threads = %d, simulation time = %g seconds", n,numthreads, simulation_time);
+    printf( "n = %d,threads = %d, simulation time = %g seconds\n", n,numthreads, simulation_time);
 
     //
     // Printing summary data
@@ -88,7 +89,7 @@ int main( int argc, char **argv )
     if( fsum )
         fclose( fsum );
 
-    free( particles );
+    free( tnodes );
     if( fsave )
         fclose( fsave );
     
