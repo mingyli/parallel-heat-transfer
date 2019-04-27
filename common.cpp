@@ -47,7 +47,7 @@ void set_len( int n )
 //
 //  Initialize the bar
 //
-void init_bar( node_t *tnodes, double ltem, double rtem )
+void init_bar( node_t *tnodes, double bar_size, double ltem, double rtem )
 {        
     // Number of nodes to create
     
@@ -57,13 +57,15 @@ void init_bar( node_t *tnodes, double ltem, double rtem )
     tnodes[0].fixed = true;
     tnodes[mesh_pts-1].T = rtem;
     tnodes[mesh_pts-1].T_sum = 0;
-    tnodes[mesh_pts-1].x = (mesh_pts-1) * dx;
+    tnodes[mesh_pts-1].x = bar_size;
     tnodes[mesh_pts-1].fixed = true;
+
+    double step = 1.0/mesh_pts;
 
     for (int i = 1; i < mesh_pts-1; i++) {
         tnodes[i].T = T_default;
         tnodes[i].T_sum = 0;
-        tnodes[i].x = (double) i * dx;
+        tnodes[i].x = (double) i * step;
         tnodes[i].fixed = false;
     }
 }

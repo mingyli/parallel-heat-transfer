@@ -31,7 +31,7 @@ int main( int argc, char **argv )
 
     node_t *tnodes = (node_t *) malloc( n * sizeof(node_t) );
     set_len( n );
-    init_bar( tnodes, 400, 200 );
+    init_bar( tnodes, (double) 1.0, 400, 200 );
 
     if( find_option( argc, argv, "-no" ) == -1 )
         {
