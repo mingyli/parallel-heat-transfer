@@ -135,10 +135,12 @@ func main() {
 	fmt.Println("Using", goPoolSize, "go routines")
 
 	var nodes []Node
-	var chans []chan float64
+	var limits []int
 	var wg sync.WaitGroup
-	sumQ := make(chan int)
-	updateQ := make(chan int)
+	var mwg1 sync.WaitGroup
+	var mwg2 sync.WaitGroup
+	mwg1.Add(1)
+	mwg2.Add(1)
 
 	if square {
 		nodes = InitSquare(n, 400, 200)
@@ -146,59 +148,55 @@ func main() {
 		nodes = InitBar(n, 400, 200)
 	}
 
-	chans = make([]chan float64, len(nodes))
-
-	for i := range nodes {
-		chans[i] = make(chan float64, len(nodes))
+	limits = make([]int, goPoolSize+1)
+	limits[0] = 0
+	for i := 0; i < goPoolSize; i += 1 {
+		limits[i+1] = (len(nodes) / goPoolSize) * (i + 1)
 	}
+	limits[goPoolSize] = len(nodes)
 
 	for i := 0; i < goPoolSize; i += 1 {
-		go func() {
+		go func(thread int) {
 			for {
-				idx := <-sumQ
-				acc := 0.0
+				mwg1.Wait()
 				if !square {
-					if !nodes[idx].Fixed {
-						if idx > 0 {
-							acc += nodes[idx-1].T
+					for i := limits[thread]; i < limits[thread+1]; i += 1 {
+						if !nodes[i].Fixed {
+							acc := 0.0
+							if i > 0 {
+								acc += nodes[i-1].T
+							}
+							if i < n-1 {
+								acc += nodes[i+1].T
+							}
+							nodes[i].TSum = acc
 						}
-						if idx < n-1 {
-							acc += nodes[idx+1].T
-						}
-						nodes[idx].TSum = acc
+					}
+				}
+				wg.Done()
+				mwg2.Wait()
+				for i := limits[thread]; i < limits[thread+1]; i += 1 {
+					if !nodes[i].Fixed {
+						nodes[i].T = nodes[i].TSum / nodes[i].Neighbors
+						nodes[i].TSum = 0
 					}
 				}
 				wg.Done()
 			}
-		}()
-	}
-
-	for i := 0; i < goPoolSize; i += 1 {
-		go func() {
-			for {
-				idx := <-updateQ
-				if !nodes[idx].Fixed {
-					nodes[idx].T = nodes[idx].TSum / nodes[idx].Neighbors
-					nodes[idx].TSum = 0
-				}
-				wg.Done()
-			}
-		}()
+		}(i)
 	}
 
 	startTime := time.Now()
 
 	for step := 0; step < NSTEPS; step++ {
-		wg.Add(len(nodes))
-		for i := 0; i < len(nodes); i += 1 {
-			sumQ <- i
-		}
+		wg.Add(goPoolSize)
+		mwg1.Done()
 		wg.Wait()
-		wg.Add(len(nodes))
-		for i := 0; i < len(nodes); i += 1 {
-			updateQ <- i
-		}
+		mwg1.Add(1)
+		wg.Add(goPoolSize)
+		mwg2.Done()
 		wg.Wait()
+		mwg2.Add(1)
 	}
 
 	elapsedTime := time.Now().Sub(startTime)
