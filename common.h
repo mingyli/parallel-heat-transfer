@@ -30,7 +30,7 @@ double read_timer( );
 //  simulation routines
 //
 void set_len( int n );
-void init_bar( node_t *tnodes, double ltem, double rtem );
+void init_bar( node_t *tnodes, double bar_size, double ltem, double rtem );
 void apply_tsum( node_t &tnode, node_t &neighbor );
 void tupdate( node_t &tnode, int dim );
 
