@@ -110,10 +110,12 @@ func (node *Node) Apply(ch *chan float64) {
 }
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+var nFlag = flag.Int("n", 1000, "Number of finite elements (or number of finite elements on side if square)")
+var squareFlag = flag.Bool("square", true, "True if computing for a square object, false if for a bar")
 
 func main() {
+	flag.Parse()
 	if PROFILING {
-		flag.Parse()
 		if *cpuprofile != "" {
 			f, err := os.Create(*cpuprofile)
 			if err != nil {
@@ -135,9 +137,9 @@ func main() {
 		defer trace.Stop()
 	}
 
-	n := 100
+	n := *nFlag
 	SetLen(n)
-	square := false
+	square := *squareFlag
 
 	var nodes []Node
 	var chans []chan float64
