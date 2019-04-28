@@ -20,7 +20,7 @@ type Node struct {
 	X         float64
 	Y         float64
 	Fixed     bool
-	Neighbors int
+	Neighbors float64
 }
 
 const PROFILING = false
@@ -47,13 +47,13 @@ func InitBar(n int, leftTemp float64, rightTemp float64) []Node {
 		nodes[k].X = float64(k) * dX
 		nodes[k].Y = 0
 		nodes[k].Fixed = false
-		nodes[k].Neighbors = 2
+		nodes[k].Neighbors = 2.0
 	}
 
 	nodes[0].FixTemp(leftTemp)
-	nodes[0].Neighbors = 1
+	nodes[0].Neighbors = 1.0
 	nodes[n-1].FixTemp(rightTemp)
-	nodes[n-1].Neighbors = 1
+	nodes[n-1].Neighbors = 1.0
 
 	return nodes
 }
@@ -82,7 +82,7 @@ func InitSquare(n int, topLeftTemp float64, bottomRightTemp float64) []Node {
 		if j > 0 {
 			neighbors += 1
 		}
-		nodes[k].Neighbors = neighbors
+		nodes[k].Neighbors = float64(neighbors)
 	}
 
 	nodes[0].FixTemp(topLeftTemp)
