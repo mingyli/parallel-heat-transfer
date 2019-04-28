@@ -52,48 +52,35 @@ int main( int argc, char **argv )
         //
         //  sum temperatures for approximation
         //
-        // Only do the inner ones first
-        for( int i = 1; i < n-1; i++ )
+        for( int i = 0; i < n; i++ )
         {
-          for (int j = 1; j < n-1; j++)
+          for (int j = 0; j < n; j++)
           {
-	        apply_tsum( tnodes[i*n + j], tnodes[(i-1)*n + j]);
-            apply_tsum( tnodes[i*n + j], tnodes[(i+1)*n + j]);
-            apply_tsum( tnodes[i*n + j], tnodes[i*n + j - 1]);
-            apply_tsum( tnodes[i*n + j], tnodes[i*n + j + 1]);
+            if ((i-1) >= 0)
+	          apply_tsum( tnodes[i*n + j], tnodes[(i-1)*n + j]);
+            if ((i+1) < n)
+              apply_tsum( tnodes[i*n + j], tnodes[(i+1)*n + j]);
+            if ((j-1) >= 0)
+              apply_tsum( tnodes[i*n + j], tnodes[i*n + j - 1]);
+            if ((j+1) < n)
+              apply_tsum( tnodes[i*n + j], tnodes[i*n + j + 1]);
           }
-        }
-
-        //assume conners are always fixed
-        for( int j = 1; j < n-1; j++ )
-        {
-          // i = 0
-          apply_tsum( tnodes[j], tnodes[n + j]);
-          apply_tsum( tnodes[j], tnodes[n + j + 1]);
-          apply_tsum( tnodes[j], tnodes[n + j - 1]);
-          // i = n-1
-          apply_tsum( tnodes[(n-1)*n + j], tnodes[(n-2)*n + j]);
-          apply_tsum( tnodes[(n-1)*n + j], tnodes[(n-2)*n + j + 1]);
-          apply_tsum( tnodes[(n-1)*n + j], tnodes[(n-2)*n + j - 1]);
-        }
-
-        for( int i = 1; i < n-1; i++ )
-        {
-          // j = 0
-          apply_tsum( tnodes[n*i], tnodes[n*i + 1]);
-          apply_tsum( tnodes[n*i], tnodes[(n+1)*i]);
-          apply_tsum( tnodes[n*i], tnodes[(n-1)*i]);
-          // j = n-1
-          apply_tsum( tnodes[n*i + (n-1)], tnodes[n*i + (n-1) - 1]);
-          apply_tsum( tnodes[n*i + (n-1)], tnodes[(n+1)*i + (n-1)]);
-          apply_tsum( tnodes[n*i + (n-1)], tnodes[(n-1)*i + (n-1)]);
         }
  
         //
         //  move particles
         //
         for( int i = 0; i < n; i++ ) 
-          tupdate( tnodes[i], 1);		
+        {
+          for( int j = 0; j < n; j++ )
+          {
+            if (i == 0 || j == 0 || i == (n-1) || j == (n-1))
+              tupdate( tnodes[i*n + j], 1);
+            else
+              tupdate( tnodes[i*n + j], 2);
+          } 
+              
+        }
 
         if( find_option( argc, argv, "-no" ) == -1 )
         {

@@ -44,23 +44,37 @@ int main( int argc, char **argv )
     numthreads = omp_get_num_threads();
     for( int step = 0; step < NSTEPS; step++ )
     {
-        //
-        //  sum temperatures for approximation
-        //
-        #pragma omp for
-        for( int i = 1; i < n-1; i++ )
+        #pragma omp for collapse(2)
+        for( int i = 0; i < n; i++ )
         {
-          apply_tsum( tnodes[i], tnodes[i-1]);
-          apply_tsum( tnodes[i], tnodes[i+1]);
+          for (int j = 0; j < n; j++)
+          {
+            if ((i-1) >= 0)
+              apply_tsum( tnodes[i*n + j], tnodes[(i-1)*n + j]);
+            if ((i+1) < n)
+              apply_tsum( tnodes[i*n + j], tnodes[(i+1)*n + j]);
+            if ((j-1) >= 0)
+              apply_tsum( tnodes[i*n + j], tnodes[i*n + j - 1]);
+            if ((j+1) < n)
+              apply_tsum( tnodes[i*n + j], tnodes[i*n + j + 1]);
+          }
         }
-        
-		
+ 
         //
         //  move particles
         //
-        #pragma omp for
+        #pragma omp for collapse(2)
         for( int i = 0; i < n; i++ ) 
-          tupdate( tnodes[i], 1);   
+        {
+          for( int j = 0; j < n; j++ )
+          {
+            if (i == 0 || j == 0 || i == (n-1) || j == (n-1))
+              tupdate( tnodes[i*n + j], 1);
+            else
+              tupdate( tnodes[i*n + j], 2);
+          } 
+              
+        }   
   
         if( find_option( argc, argv, "-no" ) == -1 ) 
         {

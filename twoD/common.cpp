@@ -115,8 +115,8 @@ void save( FILE *f, int step, int n, node_t *tnode )
     //    fprintf( f, "%d\n", n );
     //    first = false;
     //}
-    for( int i = 0; i < n; i++ )
-        fprintf( f, "%d,%g,%g,%g\n", step, tnode[i].x, 0.0, tnode[i].T);
+    for( int i = 0; i < n*n; i++ )
+        fprintf( f, "%d,%g,%g,%g\n", step, tnode[i].x, tnode[i].y, tnode[i].T);
 }
 
 //
