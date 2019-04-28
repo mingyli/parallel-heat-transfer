@@ -124,6 +124,8 @@ func (node *Node) TUpdate() {
 }
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+var nFlag = flag.Int("n", 1000, "Number of finite elements (or number of finite elements on side if square)")
+var squareFlag = flag.Bool("square", false, "True if computing for a square object, false if for a bar")
 
 func main() {
 	if PROFILING {
@@ -148,9 +150,9 @@ func main() {
 		}
 		defer trace.Stop()
 	}
-	n := 10000
+	n := *nFlag
 	SetLen(n)
-	square := false
+	square := *squareFlag
 	var nodes []Node
 
 	if square {
