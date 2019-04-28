@@ -47,7 +47,7 @@ void set_len( int n )
 //
 //  Initialize the bar
 //
-void init_bar( node_t *tnodes, double bar_size, double ltem, double rtem )
+void init_bar( node_t *tnodes, double ltem, double rtem )
 {        
     // Number of nodes to create
     
@@ -57,15 +57,13 @@ void init_bar( node_t *tnodes, double bar_size, double ltem, double rtem )
     tnodes[0].fixed = true;
     tnodes[mesh_pts-1].T = rtem;
     tnodes[mesh_pts-1].T_sum = 0;
-    tnodes[mesh_pts-1].x = bar_size;
+    tnodes[mesh_pts-1].x = (mesh_pts-1) * dx;
     tnodes[mesh_pts-1].fixed = true;
-
-    double step = 1.0/(mesh_pts-1);
 
     for (int i = 1; i < mesh_pts-1; i++) {
         tnodes[i].T = T_default;
         tnodes[i].T_sum = 0;
-        tnodes[i].x = (double) i * step;
+        tnodes[i].x = (double) i * dx;
         tnodes[i].fixed = false;
     }
 }
@@ -78,34 +76,37 @@ void apply_tsum( node_t &tnode, node_t &neighbor)
     if (tnode.fixed) {
         return;
     }
-    tnode.T_sum += neighbor.T;
+    double dist = fabs(tnode.x - neighbor.x);
+    if ( dist <= dx + 0.001 && dist != 0 ) {
+        tnode.T_sum += neighbor.T;
+    }
 }
 
 //
 //  Solve for the temperature
 //
-void tupdate( node_t &tnode, int dim )
+void tupdate( node_t &tnode )
 {
     if (tnode.fixed) {
         return;
     }
-    tnode.T = ((double) tnode.T_sum) / ((double) dim * 2);
+    tnode.T = ((double) tnode.T_sum) / ((double) 2);
     tnode.T_sum = 0;
 }
 
 //
 //  I/O routines
 //
-void save( FILE *f, int step, int n, node_t *tnode )
+void save( FILE *f, int n, node_t *tnode )
 {
-    //static bool first = true;
-    //if( first )
-    //{
-    //    fprintf( f, "%d\n", n );
-    //    first = false;
-    //}
+    static bool first = true;
+    if( first )
+    {
+        fprintf( f, "%d\n", n );
+        first = false;
+    }
     for( int i = 0; i < n; i++ )
-        fprintf( f, "%d,%g,%g,%g\n", step, tnode[i].x, 0.0, tnode[i].T);
+        fprintf( f, "%g,%g\n", tnode[i].T, tnode[i].x );
 }
 
 //

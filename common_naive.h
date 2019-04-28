@@ -30,16 +30,16 @@ double read_timer( );
 //  simulation routines
 //
 void set_len( int n );
-void init_bar( node_t *tnodes, double bar_size, double ltem, double rtem );
+void init_bar( node_t *tnodes, double ltem, double rtem );
 void apply_tsum( node_t &tnode, node_t &neighbor );
-void tupdate( node_t &tnode, int dim );
+void tupdate( node_t &tnode );
 
 
 //
 //  I/O routines
 //
 FILE *open_save( char *filename, int n );
-void save( FILE *f, int step, int n, node_t *tnodes );
+void save( FILE *f, int n, node_t *tnodes );
 
 //
 //  argument processing routines

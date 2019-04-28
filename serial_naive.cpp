@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "common.h"
+#include "common_naive.h"
 
 //
 //  benchmarking program
@@ -31,7 +31,7 @@ int main( int argc, char **argv )
 
     node_t *tnodes = (node_t *) malloc( n * sizeof(node_t) );
     set_len( n );
-    init_bar( tnodes, (double) 1.0, 400, 200 );
+    init_bar( tnodes, 400, 200 );
 
     if( find_option( argc, argv, "-no" ) == -1 )
         {
@@ -39,7 +39,7 @@ int main( int argc, char **argv )
           //  save if necessary
           //
           if( fsave )
-              save( fsave, 0, n, tnodes );
+              save( fsave, n, tnodes );
         }
     
     //
@@ -52,19 +52,17 @@ int main( int argc, char **argv )
         //
         //  sum temperatures for approximation
         //
-        // We know the ends are fixed in 1D
-        // no checks required.
-        for( int i = 1; i < n-1; i++ )
+        for( int i = 0; i < n; i++ )
         {
-		  apply_tsum( tnodes[i], tnodes[i-1]);
-          apply_tsum( tnodes[i], tnodes[i+1]);
+            for (int j = 0; j < n; j++ )
+				apply_tsum( tnodes[i], tnodes[j]);
         }
  
         //
         //  move particles
         //
         for( int i = 0; i < n; i++ ) 
-          tupdate( tnodes[i], 1);		
+            tupdate( tnodes[i] );		
 
         if( find_option( argc, argv, "-no" ) == -1 )
         {
@@ -72,7 +70,7 @@ int main( int argc, char **argv )
           //  save if necessary
           //
           if( fsave && (step%SAVEFREQ) == 0 )
-            save( fsave, step, n, tnodes );
+              save( fsave, n, tnodes );
         }
     }
     simulation_time = read_timer( ) - simulation_time;
@@ -82,8 +80,8 @@ int main( int argc, char **argv )
     //
     // Printing summary data
     //
-    // if( fsum) 
-    //    fprintf(fsum,"%d %g\n",n,simulation_time);
+    if( fsum) 
+        fprintf(fsum,"%d %g\n",n,simulation_time);
  
     //
     // Clearing space
