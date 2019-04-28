@@ -96,22 +96,9 @@ func (node *Node) FixTemp(temp float64) {
 	node.Fixed = true
 }
 
-func (node *Node) Apply(ch *chan float64) {
-	if node.Fixed {
-		return
-	}
-
-	for i := 0; i < node.Neighbors; i++ {
-		node.TSum += <-(*ch)
-	}
-
-	node.T = node.TSum / float64(node.Neighbors)
-	node.TSum = 0
-}
-
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var nFlag = flag.Int("n", 1000, "Number of finite elements (or number of finite elements on side if square)")
-var squareFlag = flag.Bool("square", true, "True if computing for a square object, false if for a bar")
+var squareFlag = flag.Bool("square", false, "True if computing for a square object, false if for a bar")
 
 func main() {
 	flag.Parse()
@@ -140,10 +127,18 @@ func main() {
 	n := *nFlag
 	SetLen(n)
 	square := *squareFlag
+	maxCpu := runtime.NumCPU()
+	runtime.GOMAXPROCS(maxCpu)
+	fmt.Println("Using", maxCpu, "processors")
+
+	goPoolSize := maxCpu
+	fmt.Println("Using", goPoolSize, "go routines")
 
 	var nodes []Node
 	var chans []chan float64
 	var wg sync.WaitGroup
+	sumQ := make(chan int)
+	updateQ := make(chan int)
 
 	if square {
 		nodes = InitSquare(n, 400, 200)
@@ -154,80 +149,54 @@ func main() {
 	chans = make([]chan float64, len(nodes))
 
 	for i := range nodes {
-		chans[i] = make(chan float64)
+		chans[i] = make(chan float64, len(nodes))
 	}
 
-	fmt.Println(runtime.NumCPU())
-	runtime.GOMAXPROCS(8)
+	for i := 0; i < goPoolSize; i += 1 {
+		go func() {
+			for {
+				idx := <-sumQ
+				acc := 0.0
+				if !square {
+					if !nodes[idx].Fixed {
+						if idx > 0 {
+							acc += nodes[idx-1].T
+						}
+						if idx < n-1 {
+							acc += nodes[idx+1].T
+						}
+						nodes[idx].TSum = acc
+					}
+				}
+				wg.Done()
+			}
+		}()
+	}
+
+	for i := 0; i < goPoolSize; i += 1 {
+		go func() {
+			for {
+				idx := <-updateQ
+				if !nodes[idx].Fixed {
+					nodes[idx].T = nodes[idx].TSum / nodes[idx].Neighbors
+					nodes[idx].TSum = 0
+				}
+				wg.Done()
+			}
+		}()
+	}
 
 	startTime := time.Now()
 
 	for step := 0; step < NSTEPS; step++ {
-		// Send temperature to all other nodes
-		/*
-			for i := 0; i < len(nodes); i++ {
-				for j := 0; j < len(nodes); j++ {
-					if i == j || nodes[j].Fixed {
-						continue
-					}
-					xDist := math.Abs(nodes[i].X - nodes[j].X)
-					yDist := math.Abs(nodes[i].Y - nodes[j].Y)
-					if (xDist < dX+EPS && yDist == 0.0) ||
-						(yDist < dX+EPS && xDist == 0.0) {
-						go func(temp float64, ch *chan float64) {
-							*ch <- temp
-						}(nodes[i].T, &chans[j])
-					}
-				}
-			}
-		*/
-
-		if !square {
-			go func(temp float64, ch *chan float64) {
-				*ch <- temp
-			}(nodes[1].T, &chans[0])
-
-			for i := 1; i < n-1; i += 1 {
-				go func(temp float64, ch *chan float64) {
-					*ch <- temp
-				}(nodes[i+1].T, &chans[i])
-				go func(temp float64, ch *chan float64) {
-					*ch <- temp
-				}(nodes[i-1].T, &chans[i])
-			}
-
-			go func(temp float64, ch *chan float64) {
-				*ch <- temp
-			}(nodes[n-2].T, &chans[n-1])
-
-		} else {
-			for i := 0; i < n; i += 1 {
-				for j := 0; j < n; j += 1 {
-					for dx := -1; dx < 2; dx += 1 {
-						for dy := -1; dy < 2; dy += 1 {
-							if (dx == 0 && dy == 0) || (dx != 0 && dy != 0) {
-								continue
-							}
-							if (i+dx < 0) || (i+dx >= n) || (j+dy < 0) || (j+dy >= n) {
-								continue
-							}
-							idxA := j*n + i
-							idxB := (j+dy)*n + (i + dx)
-							go func(temp float64, ch *chan float64) {
-								*ch <- temp
-							}(nodes[idxB].T, &chans[idxA])
-						}
-					}
-				}
-			}
+		wg.Add(len(nodes))
+		for i := 0; i < len(nodes); i += 1 {
+			sumQ <- i
 		}
-
-		for i := 0; i < len(nodes); i++ {
-			wg.Add(1)
-			go func(node *Node, ch *chan float64) {
-				defer wg.Done()
-				node.Apply(ch)
-			}(&nodes[i], &chans[i])
+		wg.Wait()
+		wg.Add(len(nodes))
+		for i := 0; i < len(nodes); i += 1 {
+			updateQ <- i
 		}
 		wg.Wait()
 	}
