@@ -137,7 +137,7 @@ func main() {
 
 	n := 100
 	SetLen(n)
-	square := true
+	square := false
 
 	var nodes []Node
 	var chans []chan float64
@@ -181,12 +181,22 @@ func main() {
 		*/
 
 		if !square {
-			//nodes[0].ApplyTsum(&nodes[1])
-			//for i := 1; i < n-1; i += 1 {
-			//nodes[i].ApplyTsum(&nodes[i+1])
-			//nodes[i].ApplyTsum(&nodes[i-1])
-			//}
-			//nodes[n-1].ApplyTsum(&nodes[n-2])
+			go func(temp float64, ch *chan float64) {
+				*ch <- temp
+			}(nodes[1].T, &chans[0])
+
+			for i := 1; i < n-1; i += 1 {
+				go func(temp float64, ch *chan float64) {
+					*ch <- temp
+				}(nodes[i+1].T, &chans[i])
+				go func(temp float64, ch *chan float64) {
+					*ch <- temp
+				}(nodes[i-1].T, &chans[i])
+			}
+
+			go func(temp float64, ch *chan float64) {
+				*ch <- temp
+			}(nodes[n-2].T, &chans[n-1])
 
 		} else {
 			for i := 0; i < n; i += 1 {
