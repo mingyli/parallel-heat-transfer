@@ -71,7 +71,7 @@ int main( int argc, char **argv )
           //
           //  save if necessary
           //
-          if( fsave && (step%SAVEFREQ) == 0 )
+          if( fsave && ((step+1)%SAVEFREQ) == 0 )
             save( fsave, step, n, tnodes );
         }
     }
