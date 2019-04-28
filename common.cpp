@@ -60,7 +60,7 @@ void init_bar( node_t *tnodes, double bar_size, double ltem, double rtem )
     tnodes[mesh_pts-1].x = bar_size;
     tnodes[mesh_pts-1].fixed = true;
 
-    double step = 1.0/mesh_pts;
+    double step = 1.0/(mesh_pts-1);
 
     for (int i = 1; i < mesh_pts-1; i++) {
         tnodes[i].T = T_default;
