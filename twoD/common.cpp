@@ -68,7 +68,7 @@ void init_bar( node_t *tnodes, double bar_size, double ltem, double rtem )
     }
     
     for (int i = 1; i < mesh_pts-1; i++) {
-        for (int j = 0; j < mesh_pts; j++) {
+        for (int j = 1; j < mesh_pts-1; j++) {
             tnodes[mesh_pts*i + j].T = T_default;
             tnodes[mesh_pts*i + j].T_sum = 0;
             tnodes[mesh_pts*i + j].x = (double) step*j;
@@ -76,7 +76,19 @@ void init_bar( node_t *tnodes, double bar_size, double ltem, double rtem )
             tnodes[mesh_pts*i + j].fixed = false;
             tnodes[mesh_pts*i + j].edge = false;
         }  
+
+        tnodes[mesh_pts*i].T = ltem;
+        tnodes[mesh_pts*i].T_sum = 0;
+        tnodes[mesh_pts*i].x = (double) 0;
+        tnodes[mesh_pts*i].y = (double) step*i;
+        tnodes[mesh_pts*i].fixed = true;
         tnodes[mesh_pts*i].edge = true;
+
+        tnodes[mesh_pts*i + (mesh_pts-1)].T = rtem;
+        tnodes[mesh_pts*i + (mesh_pts-1)].T_sum = 0;
+        tnodes[mesh_pts*i + (mesh_pts-1)].x = (double) 0;
+        tnodes[mesh_pts*i + (mesh_pts-1)].y = (double) step*i;
+        tnodes[mesh_pts*i + (mesh_pts-1)].fixed = true;
         tnodes[mesh_pts*i + (mesh_pts-1)].edge = true;
     }
 }
@@ -95,12 +107,12 @@ void apply_tsum( node_t &tnode, node_t &neighbor)
 //
 //  Solve for the temperature
 //
-void tupdate( node_t &tnode, int dim )
+void tupdate( node_t &tnode, double div )
 {
     if (tnode.fixed) {
         return;
     }
-    tnode.T = ((double) tnode.T_sum) / ((double) dim * 2);
+    tnode.T = ((double) tnode.T_sum) / ((double) div);
     tnode.T_sum = 0;
 }
 

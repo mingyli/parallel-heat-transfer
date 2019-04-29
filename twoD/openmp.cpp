@@ -68,10 +68,10 @@ int main( int argc, char **argv )
         {
           for( int j = 0; j < n; j++ )
           {
-            if (i == 0 || j == 0 || i == (n-1) || j == (n-1))
-              tupdate( tnodes[i*n + j], 1);
+            if (tnodes[i*n + j].edge)
+              tupdate( tnodes[i*n + j], 3);
             else
-              tupdate( tnodes[i*n + j], 2);
+              tupdate( tnodes[i*n + j], 4);
           } 
               
         }   

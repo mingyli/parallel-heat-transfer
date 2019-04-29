@@ -34,7 +34,7 @@ double read_timer( );
 void set_len( int n );
 void init_bar( node_t *tnodes, double bar_size, double ltem, double rtem );
 void apply_tsum( node_t &tnode, node_t &neighbor );
-void tupdate( node_t &tnode, int dim );
+void tupdate( node_t &tnode, double div );
 
 
 //
