@@ -27,11 +27,6 @@ int main(int argc, char **argv) {
   set_len(n);
   init_bar( tnodes, (double) 1.0, 400, 200 );
 
-  if (find_option(argc, argv, "-no") == -1) {
-    if (fsave)
-      save( fsave, 0, n, tnodes );
-  }
-
   // Set up MPI
   int n_proc, rank;
   MPI_Init(&argc, &argv);
@@ -40,8 +35,8 @@ int main(int argc, char **argv) {
 
   MPI_Datatype NODE;
   int blocklen[2] = {3, 1};
-  MPI_Aint displacements[2] = {0, 12};
-  MPI_Datatype types[2] = {MPI_DOUBLE, MPI_C_BOOL};
+  MPI_Aint displacements[2] = {0, 24};
+  MPI_Datatype types[2] = {MPI_DOUBLE, MPI_INT};
   MPI_Type_create_struct(2, blocklen, displacements, types, &NODE);
   MPI_Type_commit(&NODE);
 
@@ -54,38 +49,58 @@ int main(int argc, char **argv) {
   printf("rank: %d\n", rank);
   printf("lindex: %d, rindex: %d\n", lindex, rindex);
 
-  node_t recv_nodes_buffer[1];
+  node_t *recv_buffer = (node_t *) malloc(n * sizeof(node_t));
+
+  int tag;
+  int dest_rank, source_rank;
+  MPI_Status status;
 
   double simulation_time = read_timer( );
   for (int step = 0; step < NSTEPS; ++step) {
     // Compute temperature changes
-    for (int i = max(1, lindex); i < rindex; ++i) {
+    for (int i = lindex; i < rindex; ++i) {
       apply_tsum(tnodes[i], tnodes[i-1]);
       apply_tsum(tnodes[i], tnodes[i+1]);
     }
 
-    // Send adjacent particles to adjacent processors
-    int tag;
-    int dest_rank, source_rank;
-    MPI_Status status;
+    for (int i = lindex; i < rindex; ++i) {
+      tupdate(tnodes[i], 1);
+    }
 
+    // Send adjacent particles to adjacent processors
     // Send to left
     dest_rank = (rank == 0) ? MPI_PROC_NULL : (rank - 1);
     source_rank = (rank == n_proc - 1) ? MPI_PROC_NULL : (rank + 1);
     MPI_Sendrecv(&tnodes[lindex], 1, NODE, dest_rank, 0,
-                 recv_nodes_buffer, 1, NODE, source_rank, 0,
+                 recv_buffer, 1, NODE, source_rank, 0,
 		 MPI_COMM_WORLD, &status);
-    tnodes[rindex-1] = recv_nodes_buffer[0];
+    if (rank != n_proc - 1) {
+	    tnodes[rindex] = recv_buffer[0];
+    }
 
     // Send to right
     dest_rank = (rank == n_proc - 1) ? MPI_PROC_NULL : (rank + 1);
     source_rank = (rank == 0) ? MPI_PROC_NULL : (rank - 1);
     MPI_Sendrecv(&tnodes[rindex-1], 1, NODE, dest_rank, 0,
-		 recv_nodes_buffer, 1, NODE, source_rank, 0,
+		 recv_buffer, 1, NODE, source_rank, 0,
 		 MPI_COMM_WORLD, &status);
-    tnodes[lindex] = recv_nodes_buffer[0];
+    if (rank != 0)
+	    tnodes[lindex-1] = recv_buffer[0];
+
+    if( find_option( argc, argv, "-no" ) == -1 ) {
+	    if( fsave && (step % SAVEFREQ == 0)) {
+		    MPI_Allgather(&tnodes[lindex], rindex - lindex, NODE,
+				    recv_buffer, rindex - lindex, NODE, MPI_COMM_WORLD);
+		    if (rank == 0) {
+			    save( fsave, step, n, recv_buffer );
+		    }
+	    }
+    }
   }
   simulation_time = read_timer( ) - simulation_time;
+
+  MPI_Allgather(&tnodes[lindex], rindex - lindex, NODE,
+		  recv_buffer, rindex - lindex, NODE, MPI_COMM_WORLD);
 
   if (0 == rank) {
     printf( "n = %d, simulation time = %g seconds\n", n, simulation_time);

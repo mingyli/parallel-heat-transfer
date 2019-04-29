@@ -18,7 +18,7 @@ typedef struct
   double T;
   double T_sum;
   double x;
-  bool fixed;
+  int fixed;
 } node_t;
 
 //
