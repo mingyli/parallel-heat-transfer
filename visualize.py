@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.cm as colormap
@@ -28,12 +29,13 @@ def main():
     y = data["position"][:, 1]
     fig = plt.figure()
     ax = fig.add_subplot(111, xlim=(min(x), max(x)), ylim=(min(y), max(y)))
-    points = ax.scatter([], [], c=[], cmap="jet")
+    norm = matplotlib.colors.Normalize(vmin=min(data["temperature"]), vmax=max(data["temperature"]))
+    points = ax.scatter([], [], c=[], cmap="jet", norm=norm)
 
     def animate(time):
         segment = data[time == data["timestamp"]]
         temperature = segment["temperature"]
-        points.set_color(colormap.jet(temperature))
+        points.set_color(colormap.jet(norm(temperature)))
         points.set_offsets(segment["position"])
         return (points,)
 
